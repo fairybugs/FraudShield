@@ -7,13 +7,4 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
-  <ItemGroup>
-    <Folder Include="Models\" />
-    <Folder Include="Generador\" />
-    <Folder Include="Data\" />
-    <Folder Include="Analizadores\" />
-    <Folder Include="Metrics\" />
-    <Folder Include="Services\" />
-  </ItemGroup>
-
 </Project>
