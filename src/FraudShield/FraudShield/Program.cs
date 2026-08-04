@@ -1,5 +1,6 @@
-﻿using System;
+﻿using FraudShield.Data;
 using FraudShield.Generador;
+using System;
 
 namespace FraudShield
 {
@@ -17,11 +18,11 @@ namespace FraudShield
                 Console.WriteLine("SISTEMA DETECTOR DE FRAUDE BANCARIO");
                 Console.WriteLine("==========================================");
                 Console.WriteLine("1. Generar archivo CSV");
-                Console.WriteLine("2. Leer archivo CSV (pendiente)");
-                Console.WriteLine("3. Ejecutar versión secuencial (pendiente)");
-                Console.WriteLine("4. Ejecutar versión paralela (pendiente)");
-                Console.WriteLine("5. Comparar resultados (pendiente)");
-                Console.WriteLine("6. Mostrar estadísticas (pendiente)");
+                Console.WriteLine("2. Leer archivo CSV ");
+                Console.WriteLine("3. Ejecutar versión secuencial");
+                Console.WriteLine("4. Ejecutar versión paralela ");
+                Console.WriteLine("5. Comparar resultados ");
+                Console.WriteLine("6. Mostrar estadísticas ");
                 Console.WriteLine("7. Salir");
                 Console.WriteLine("==========================================");
                 Console.Write("Seleccione una opción: ");
@@ -45,7 +46,14 @@ namespace FraudShield
                         break;
 
                     case "2":
-                        Console.WriteLine(" Aquí irá la lógica de LectorCSV.cs");
+                        Console.Write("Ingrese la ruta del archivo CSV: ");
+                        string rutaLectura = Console.ReadLine() ?? string.Empty;
+
+                        var lector = new LectorCSV();
+                        var transacciones = lector.LeerArchivo(rutaLectura);
+
+                        Console.WriteLine($"Se leyeron {transacciones.Count} transacciones.");
+                        Console.WriteLine("Presione una tecla para continuar...");
                         Console.ReadKey();
                         break;
 
