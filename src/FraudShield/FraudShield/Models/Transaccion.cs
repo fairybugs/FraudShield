@@ -11,6 +11,8 @@ public class Transaccion
 
     public string Pais { get; set; } = string.Empty;
 
+    public string Ciudad { get; set; } = string.Empty;
+
     public string PaisHabitual { get; set; } = string.Empty;
 
     public DateTime FechaHora { get; set; }
@@ -20,6 +22,8 @@ public class Transaccion
     public string Categoria { get; set; } = string.Empty;
 
     public string MetodoPago { get; set; } = string.Empty;
+
+    public string Moneda { get; set; } = string.Empty;
 
     public bool EsFraudeReal { get; set; }
 }
