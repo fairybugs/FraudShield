@@ -9,6 +9,8 @@ public class Transaccion
 
     public decimal Monto { get; set; }
 
+    public decimal MontoPromedioCliente { get; set; }
+
     public string Pais { get; set; } = string.Empty;
 
     public string Ciudad { get; set; } = string.Empty;

@@ -10,6 +10,10 @@ namespace FraudShield.Models
 
         public int Riesgo { get; set; }
 
+        public bool EsSospechosa { get; set; }
+
         public string Motivo { get; set; } = string.Empty;
+
+        
     }
 }

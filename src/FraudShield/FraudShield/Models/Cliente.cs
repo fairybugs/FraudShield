@@ -10,6 +10,8 @@ namespace FraudShield.Models
 
         public string PaisHabitual { get; set; } = string.Empty;
 
+        public string CiudadHabitual { get; set; } = string.Empty;
+
         public decimal MontoPromedio { get; set; }
 
         public int HoraInicioHabitual { get; set; }
