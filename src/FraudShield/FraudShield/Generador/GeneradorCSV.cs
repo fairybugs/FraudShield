@@ -156,22 +156,42 @@ public class GeneradorCSV
     /// Genera las transacciones fraudulentas.
     /// </summary>
     private void GenerarTransaccionesFraudulentas(
-        List<Transaccion> transacciones,
-        List<Cliente> clientes,
-        int cantidad)
+    List<Transaccion> transacciones,
+    List<Cliente> clientes,
+    int cantidad)
     {
         long id = transacciones.Count + 1;
 
-        for (int i = 0; i < cantidad; i++)
+        int restantes = cantidad;
+
+        while (restantes > 0)
         {
             Cliente cliente = clientes[_random.Next(clientes.Count)];
 
-            Transaccion transaccion =
-                CrearTransaccion(cliente, id++, true);
+            bool generarRafaga =
+                restantes >= 5 &&
+                _random.Next(100) < 20;
 
-            AplicarFraude(transaccion, cliente);
+            if (generarRafaga)
+            {
+                GenerarRafagaFraudulenta(
+                    transacciones,
+                    cliente,
+                    ref id);
 
-            transacciones.Add(transaccion);
+                restantes -= 5;
+            }
+            else
+            {
+                Transaccion transaccion =
+                    CrearTransaccion(cliente, id++, true);
+
+                AplicarFraude(transaccion, cliente);
+
+                transacciones.Add(transaccion);
+
+                restantes--;
+            }
         }
     }
 
@@ -255,7 +275,7 @@ public class GeneradorCSV
     private DateTime GenerarFecha(Cliente cliente)
     {
         DateTime fecha =
-            DateTime.Now.AddDays(-_random.Next(30));
+            DateTime.Now.Date.AddDays(-_random.Next(30));
 
         int hora =
             _random.Next(
@@ -272,6 +292,7 @@ public class GeneradorCSV
             .AddSeconds(segundo);
     }
 
+
     private void AplicarFraude(
     Transaccion transaccion,
     Cliente cliente)
@@ -282,62 +303,127 @@ public class GeneradorCSV
         {
             case 0:
 
-                decimal factor = _random.Next(5, 11);
-
-                transaccion.Monto *= factor;
+                AplicarFraudeMonto(transaccion);
+                AplicarFraudePais(transaccion, cliente);
 
                 break;
 
+            // Monto + Horario
             case 1:
 
-                string pais =
-                    CatalogoDatos.ObtenerPais(_random);
-
-                while (pais == cliente.PaisHabitual)
-                    pais = CatalogoDatos.ObtenerPais(_random);
-
-                transaccion.Pais = pais;
-
-                transaccion.Ciudad =
-                    CatalogoDatos.ObtenerCiudad(_random, pais);
-
-                transaccion.Moneda =
-                    CatalogoDatos.ObtenerMoneda(pais);
+                AplicarFraudeMonto(transaccion);
+                AplicarFraudeHorario(transaccion);
 
                 break;
 
             case 2:
 
-                transaccion.FechaHora =
-                    transaccion.FechaHora.Date
-                    .AddHours(_random.Next(0, 5))
-                    .AddMinutes(_random.Next(60));
+                AplicarFraudePais(transaccion, cliente);
+                AplicarFraudeComercio(transaccion);
+                AplicarFraudeHorario(transaccion);
 
                 break;
 
             case 3:
 
-                string comercio =
-                    CatalogoDatos.ObtenerComercioRiesgoso(_random);
-
-                transaccion.Comercio = comercio;
-
-                transaccion.Categoria =
-                    CatalogoDatos.ObtenerCategoria(comercio);
+                AplicarFraudeMonto(transaccion);
+                AplicarFraudePais(transaccion, cliente);
+                AplicarFraudeHorario(transaccion);
 
                 break;
 
             case 4:
 
-                transaccion.Monto *= 6;
-
-                transaccion.FechaHora =
-                    transaccion.FechaHora.Date
-                    .AddHours(_random.Next(0, 4))
-                    .AddMinutes(_random.Next(60));
+                AplicarFraudeMonto(transaccion);
+                AplicarFraudeComercio(transaccion);
+                AplicarFraudeHorario(transaccion);
 
                 break;
         }
+    }
+
+    private void AplicarFraudeMonto(
+    Transaccion transaccion)
+    {
+        decimal factor = _random.Next(5, 11);
+
+        transaccion.Monto = Math.Round(transaccion.Monto * factor, 2);
+    }
+
+    private void GenerarRafagaFraudulenta(
+    List<Transaccion> transacciones,
+    Cliente cliente,
+    ref long id)
+    {
+        DateTime fechaBase = GenerarFecha(cliente);
+
+        for (int i = 0; i < 5; i++)
+        {
+            Transaccion transaccion =
+                CrearTransaccion(cliente, id++, true);
+
+            transaccion.FechaHora =
+                fechaBase.AddMinutes(i);
+
+            AplicarFraudeMonto(transaccion);
+            AplicarFraudeComercio(transaccion);
+
+            transacciones.Add(transaccion);
+        }
+    }
+
+    private void AplicarFraudePais(
+    Transaccion transaccion,
+    Cliente cliente)
+    {
+        string pais =
+            CatalogoDatos.ObtenerPais(_random);
+
+        while (pais == cliente.PaisHabitual)
+        {
+            pais = CatalogoDatos.ObtenerPais(_random);
+        }
+
+        transaccion.Pais = pais;
+
+        transaccion.Ciudad =
+            CatalogoDatos.ObtenerCiudad(_random, pais);
+
+        transaccion.Moneda =
+            CatalogoDatos.ObtenerMoneda(pais);
+    }
+
+    private void AplicarFraudeHorario(
+    Transaccion transaccion)
+    {
+        int hora;
+
+        if (_random.Next(2) == 0)
+        {
+            hora = _random.Next(0, 6);   // madrugada
+        }
+        else
+        {
+            hora = _random.Next(22, 24); // 22:00 o 23:00
+        }
+
+        transaccion.FechaHora =
+            transaccion.FechaHora.Date
+            .AddHours(hora)
+            .AddMinutes(_random.Next(60))
+            .AddSeconds(_random.Next(60));
+    }
+
+    private void AplicarFraudeComercio(
+    Transaccion transaccion)
+    {
+        string comercio =
+            CatalogoDatos.ObtenerComercioRiesgoso(_random);
+
+        transaccion.Comercio = comercio;
+
+        transaccion.Categoria =
+            CatalogoDatos.ObtenerCategoria(comercio);
     }
 
     #endregion
