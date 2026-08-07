@@ -12,7 +12,7 @@ public class DetectorParaleloTests
     [Fact]
     public void DebeGenerarCincoResultadosPorUnaTransaccion()
     {
-        var detector = new DetectorParalelo();
+        var detector = new DetectorParalelo(Environment.ProcessorCount);
 
         var transacciones = new List<Transaccion>
         {
@@ -36,7 +36,7 @@ public class DetectorParaleloTests
     [Fact]
     public void DebeGenerarDiezResultadosParaDosTransacciones()
     {
-        var detector = new DetectorParalelo();
+        var detector = new DetectorParalelo(Environment.ProcessorCount);
 
         var transacciones = new List<Transaccion>
         {
@@ -71,7 +71,7 @@ public class DetectorParaleloTests
     [Fact]
     public void NoDebeGenerarResultadosSiNoHayTransacciones()
     {
-        var detector = new DetectorParalelo();
+        var detector = new DetectorParalelo(Environment.ProcessorCount);
 
         var transacciones = new List<Transaccion>();
 
@@ -79,4 +79,35 @@ public class DetectorParaleloTests
 
         Assert.Empty(resultados);
     }
+
+    [Theory]
+    [InlineData(2)]
+    [InlineData(4)]
+    public void DebeGradosdeParalelismo(int hilos)
+    {
+        var detector = new DetectorParalelo(hilos);
+
+        var transacciones = new List<Transaccion>
+    {
+        new()
+        {
+            ClienteId = "C0001",
+            Monto = 1000,
+            MontoPromedioCliente = 1000,
+            Pais = "República Dominicana",
+            PaisHabitual = "República Dominicana",
+            FechaHora = DateTime.Now,
+            Comercio = "Jumbo"
+        }
+    };
+
+        var resultados = detector.Detectar(transacciones);
+
+        Assert.Equal(5, resultados.Count);
+    }
+
+
+
+
+
 }

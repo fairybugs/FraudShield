@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using FraudShield.Analizadores;
 using FraudShield.Interfaces;
 using FraudShield.Models;
@@ -13,18 +10,30 @@ namespace FraudShield.Services;
 /// </summary>
 public class DetectorParalelo : IDetectorFraude
 {
+    private readonly int _maximoHilos;
+
     private readonly AnalizadorMonto _analizadorMonto = new();
     private readonly AnalizadorPais _analizadorPais = new();
     private readonly AnalizadorHorario _analizadorHorario = new();
     private readonly AnalizadorComercio _analizadorComercio = new();
     private readonly AnalizadorFrecuencia _analizadorFrecuencia = new();
 
+    public DetectorParalelo(int maximoHilos)
+    {
+        _maximoHilos = maximoHilos;
+    }
+
     public List<ResultadoAnalisis> Detectar(
         IEnumerable<Transaccion> transacciones)
     {
         ConcurrentBag<ResultadoAnalisis> resultados = new();
 
-        Parallel.ForEach(transacciones, transaccion =>
+        ParallelOptions opciones = new()
+        {
+            MaxDegreeOfParallelism = _maximoHilos
+        };
+
+        Parallel.ForEach(transacciones, opciones, transaccion =>
         {
             resultados.Add(
                 _analizadorMonto.Analizar(transaccion));

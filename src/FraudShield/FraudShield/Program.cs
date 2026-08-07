@@ -105,14 +105,32 @@ namespace FraudShield
                         Console.WriteLine($"Hilo principal de inicio: {Environment.CurrentManagedThreadId}");
                         Console.WriteLine();
 
-                        var detectorParalelo = new DetectorParalelo();
+                        Console.WriteLine($"Procesadores disponibles: {Environment.ProcessorCount}");
 
-                        var resultadosParalelo = detectorParalelo.Detectar(transacciones);
+                        Console.Write("Ingrese la cantidad de núcleos a utilizar: ");
 
-                        Console.WriteLine($"Transacciones analizadas: {transacciones.Count}");
-                        Console.WriteLine($"Resultados generados: {resultadosParalelo.Count}");
+                        int nucleos = int.Parse(Console.ReadLine() ?? "1");
+
+                        if (nucleos < 1 || nucleos > Environment.ProcessorCount)
+                        {
+                            Console.WriteLine("Cantidad de núcleos no válida.");
+                            Console.WriteLine("Presione una tecla para continuar...");
+                            Console.ReadKey();
+                            break;
+                        }
+
+                        var detectorParalelo = new DetectorParalelo(nucleos);
+
+                        var resultadosParalelo =
+                            detectorParalelo.Detectar(transacciones);
+
                         Console.WriteLine();
 
+                        Console.WriteLine($"Núcleos utilizados: {nucleos}");
+                        Console.WriteLine($"Transacciones analizadas: {transacciones.Count}");
+                        Console.WriteLine($"Resultados generados: {resultadosParalelo.Count}");
+
+                        Console.WriteLine();
                         Console.WriteLine($"Hilo principal de finalización: {Environment.CurrentManagedThreadId}");
 
                         Console.WriteLine();

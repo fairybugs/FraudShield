@@ -13,7 +13,7 @@ public class ComparacionDetectoresTests
     public void DebenTenerLoMismo()
     {
         var detectorSecuencial = new DetectorSecuencial();
-        var detectorParalelo = new DetectorParalelo();
+        var detectorParalelo = new DetectorParalelo(Environment.ProcessorCount);
 
         var transacciones = new List<Transaccion>
         {
