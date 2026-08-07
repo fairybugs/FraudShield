@@ -70,16 +70,20 @@ namespace FraudShield
                             break;
                         }
 
-                        var detector = new DetectorSecuencial();
-
-                        var resultados = detector.Detectar(transacciones);
-
                         Console.WriteLine();
                         Console.WriteLine("===== DETECTOR SECUENCIAL =====");
-                        Console.WriteLine($"Hilo inicial: {Environment.CurrentManagedThreadId}\n");
+                        Console.WriteLine($"Hilo principal de inicio: {Environment.CurrentManagedThreadId}");
+                        Console.WriteLine();
+
+                        var detectorSecuencial = new DetectorSecuencial();
+
+                        var resultadosSecuencial = detectorSecuencial.Detectar(transacciones);
+
                         Console.WriteLine($"Transacciones analizadas: {transacciones.Count}");
-                        Console.WriteLine($"Resultados generados: {resultados.Count}");
-                        Console.WriteLine($"\nHilo final: {Environment.CurrentManagedThreadId}");
+                        Console.WriteLine($"Resultados generados: {resultadosSecuencial.Count}");
+                        Console.WriteLine();
+
+                        Console.WriteLine($"Hilo principal de finalización: {Environment.CurrentManagedThreadId}");
 
                         Console.WriteLine();
                         Console.WriteLine("Presione una tecla para continuar...");
@@ -88,8 +92,33 @@ namespace FraudShield
                         break;
 
                     case "4":
-                        Console.WriteLine(" Aquí se ejecutará la versión paralela");
+
+                        if (!transacciones.Any())
+                        {
+                            Console.WriteLine("Primero debe cargar un archivo CSV.");
+                            Console.ReadKey();
+                            break;
+                        }
+
+                        Console.WriteLine();
+                        Console.WriteLine("===== DETECTOR PARALELO =====");
+                        Console.WriteLine($"Hilo principal de inicio: {Environment.CurrentManagedThreadId}");
+                        Console.WriteLine();
+
+                        var detectorParalelo = new DetectorParalelo();
+
+                        var resultadosParalelo = detectorParalelo.Detectar(transacciones);
+
+                        Console.WriteLine($"Transacciones analizadas: {transacciones.Count}");
+                        Console.WriteLine($"Resultados generados: {resultadosParalelo.Count}");
+                        Console.WriteLine();
+
+                        Console.WriteLine($"Hilo principal de finalización: {Environment.CurrentManagedThreadId}");
+
+                        Console.WriteLine();
+                        Console.WriteLine("Presione una tecla para continuar...");
                         Console.ReadKey();
+
                         break;
 
                     case "5":
