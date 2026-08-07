@@ -23,18 +23,36 @@ public class DetectorParalelo : IDetectorFraude
         _maximoHilos = maximoHilos;
     }
 
+    /// <summary>
+    /// Analiza una colección de transacciones de forma paralela.
+    /// </summary>
     public List<ResultadoAnalisis> Detectar(
         IEnumerable<Transaccion> transacciones)
     {
         ConcurrentBag<ResultadoAnalisis> resultados = new();
+
+        // Convertimos la colección a lista una sola vez.
+        List<Transaccion> historial = transacciones.ToList();
+
+        // Agrupamos las transacciones por cliente y las ordenamos por fecha.
+        Dictionary<string, List<Transaccion>> historialPorCliente =
+            historial
+                .GroupBy(t => t.ClienteId)
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.OrderBy(t => t.FechaHora).ToList());
 
         ParallelOptions opciones = new()
         {
             MaxDegreeOfParallelism = _maximoHilos
         };
 
-        Parallel.ForEach(transacciones, opciones, transaccion =>
+        Parallel.ForEach(historial, opciones, transaccion =>
         {
+            // Obtenemos únicamente el historial del cliente actual.
+            List<Transaccion> historialCliente =
+                historialPorCliente[transaccion.ClienteId];
+
             resultados.Add(
                 _analizadorMonto.Analizar(transaccion));
 
@@ -50,7 +68,7 @@ public class DetectorParalelo : IDetectorFraude
             resultados.Add(
                 _analizadorFrecuencia.Analizar(
                     transaccion,
-                    transacciones));
+                    historialCliente));
         });
 
         return resultados.ToList();

@@ -3,6 +3,7 @@ using FraudShield.Data;
 using FraudShield.Generador;
 using FraudShield.Models;
 using FraudShield.Services;
+using FraudShield.Metrics;
 
 
 namespace FraudShield
@@ -14,6 +15,11 @@ namespace FraudShield
             bool salir = false;
             var generador = new GeneradorCSV();
             List<Transaccion> transacciones = new();
+
+            ResultadoMedicion? medicionSecuencial = null;
+            ResultadoMedicion? medicionParalela = null;
+
+            int nucleosUtilizados = 0;
 
             while (!salir)
             {
@@ -76,11 +82,14 @@ namespace FraudShield
                         Console.WriteLine();
 
                         var detectorSecuencial = new DetectorSecuencial();
+                        var medidorSecuencial = new MedidorTiempo();
 
-                        var resultadosSecuencial = detectorSecuencial.Detectar(transacciones);
+                        medicionSecuencial =
+                            medidorSecuencial.Medir(detectorSecuencial, transacciones);
 
                         Console.WriteLine($"Transacciones analizadas: {transacciones.Count}");
-                        Console.WriteLine($"Resultados generados: {resultadosSecuencial.Count}");
+                        Console.WriteLine($"Resultados generados: {medicionSecuencial.Resultados.Count}");
+                        Console.WriteLine($"Tiempo de ejecución: {medicionSecuencial.Tiempo} ms");
                         Console.WriteLine();
 
                         Console.WriteLine($"Hilo principal de finalización: {Environment.CurrentManagedThreadId}");
@@ -119,16 +128,20 @@ namespace FraudShield
                             break;
                         }
 
-                        var detectorParalelo = new DetectorParalelo(nucleos);
+                        nucleosUtilizados = nucleos;
 
-                        var resultadosParalelo =
-                            detectorParalelo.Detectar(transacciones);
+                        var detectorParalelo = new DetectorParalelo(nucleosUtilizados);
+                        var medidorParalelo = new MedidorTiempo();
+
+                        medicionParalela =
+                            medidorParalelo.Medir(detectorParalelo, transacciones);
 
                         Console.WriteLine();
 
-                        Console.WriteLine($"Núcleos utilizados: {nucleos}");
+                        Console.WriteLine($"Núcleos utilizados: {nucleosUtilizados}");
                         Console.WriteLine($"Transacciones analizadas: {transacciones.Count}");
-                        Console.WriteLine($"Resultados generados: {resultadosParalelo.Count}");
+                        Console.WriteLine($"Resultados generados: {medicionParalela.Resultados.Count}");
+                        Console.WriteLine($"Tiempo de ejecución: {medicionParalela.Tiempo} ms");
 
                         Console.WriteLine();
                         Console.WriteLine($"Hilo principal de finalización: {Environment.CurrentManagedThreadId}");
