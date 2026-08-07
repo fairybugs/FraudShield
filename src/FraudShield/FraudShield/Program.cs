@@ -1,6 +1,9 @@
-﻿using FraudShield.Data;
+﻿using System;
+using FraudShield.Data;
 using FraudShield.Generador;
-using System;
+using FraudShield.Models;
+using FraudShield.Services;
+
 
 namespace FraudShield
 {
@@ -10,6 +13,7 @@ namespace FraudShield
         {
             bool salir = false;
             var generador = new GeneradorCSV();
+            List<Transaccion> transacciones = new();
 
             while (!salir)
             {
@@ -50,7 +54,7 @@ namespace FraudShield
                         string rutaLectura = Console.ReadLine() ?? string.Empty;
 
                         var lector = new LectorCSV();
-                        var transacciones = lector.LeerArchivo(rutaLectura);
+                        transacciones = lector.LeerArchivo(rutaLectura);
 
                         Console.WriteLine($"Se leyeron {transacciones.Count} transacciones.");
                         Console.WriteLine("Presione una tecla para continuar...");
@@ -58,8 +62,29 @@ namespace FraudShield
                         break;
 
                     case "3":
-                        Console.WriteLine(" Aquí se ejecutará la versión secuencial");
+
+                        if (!transacciones.Any())
+                        {
+                            Console.WriteLine("Primero debe cargar un archivo CSV.");
+                            Console.ReadKey();
+                            break;
+                        }
+
+                        var detector = new DetectorSecuencial();
+
+                        var resultados = detector.Detectar(transacciones);
+
+                        Console.WriteLine();
+                        Console.WriteLine("===== DETECTOR SECUENCIAL =====");
+                        Console.WriteLine($"Hilo inicial: {Environment.CurrentManagedThreadId}\n");
+                        Console.WriteLine($"Transacciones analizadas: {transacciones.Count}");
+                        Console.WriteLine($"Resultados generados: {resultados.Count}");
+                        Console.WriteLine($"\nHilo final: {Environment.CurrentManagedThreadId}");
+
+                        Console.WriteLine();
+                        Console.WriteLine("Presione una tecla para continuar...");
                         Console.ReadKey();
+
                         break;
 
                     case "4":
