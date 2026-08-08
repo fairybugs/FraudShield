@@ -18,6 +18,7 @@ namespace FraudShield
 
             ResultadoMedicion? medicionSecuencial = null;
             ResultadoMedicion? medicionParalela = null;
+            var resumenFraude = new ResumenFraude();
 
             int nucleosUtilizados = 0;
 
@@ -90,6 +91,9 @@ namespace FraudShield
                         Console.WriteLine($"Transacciones analizadas: {transacciones.Count}");
                         Console.WriteLine($"Resultados generados: {medicionSecuencial.Resultados.Count}");
                         Console.WriteLine($"Tiempo de ejecución: {medicionSecuencial.Tiempo} ms");
+
+                        resumenFraude.Mostrar(medicionSecuencial.Resultados);
+
                         Console.WriteLine();
 
                         Console.WriteLine($"Hilo principal de finalización: {Environment.CurrentManagedThreadId}");
@@ -119,6 +123,7 @@ namespace FraudShield
                         Console.Write("Ingrese la cantidad de núcleos a utilizar: ");
 
                         int nucleos = int.Parse(Console.ReadLine() ?? "1");
+                        nucleosUtilizados = nucleos;
 
                         if (nucleos < 1 || nucleos > Environment.ProcessorCount)
                         {
@@ -143,6 +148,8 @@ namespace FraudShield
                         Console.WriteLine($"Resultados generados: {medicionParalela.Resultados.Count}");
                         Console.WriteLine($"Tiempo de ejecución: {medicionParalela.Tiempo} ms");
 
+                        resumenFraude.Mostrar(medicionParalela.Resultados);
+
                         Console.WriteLine();
                         Console.WriteLine($"Hilo principal de finalización: {Environment.CurrentManagedThreadId}");
 
@@ -153,15 +160,91 @@ namespace FraudShield
                         break;
 
                     case "5":
-                        Console.WriteLine(" Aquí se compararán los resultados");
-                        Console.ReadKey();
-                        break;
+                        {
+                            if (medicionSecuencial == null || medicionParalela == null)
+                            {
+                                Console.WriteLine("Primero debe ejecutar las versiones secuencial y paralela.");
+                                Console.ReadKey();
+                                break;
+                            }
+
+                            double speedup =
+                                CalculadoraMetricas.CalcularSpeedup(
+                                    medicionSecuencial.Tiempo,
+                                    medicionParalela.Tiempo);
+
+                            Console.WriteLine();
+                            Console.WriteLine("========== COMPARACIÓN ==========");
+                            Console.WriteLine();
+
+                            Console.WriteLine($"Tiempo secuencial : {medicionSecuencial.Tiempo:F2} ms");
+                            Console.WriteLine($"Tiempo paralelo   : {medicionParalela.Tiempo:F2} ms");
+                            Console.WriteLine($"Speedup           : {speedup:F2}x");
+
+                            Console.WriteLine();
+
+                            if (medicionParalela.Tiempo < medicionSecuencial.Tiempo)
+                            {
+                                Console.WriteLine("La versión paralela fue más rápida.");
+                            }
+                            else if (medicionParalela.Tiempo > medicionSecuencial.Tiempo)
+                            {
+                                Console.WriteLine("La versión secuencial fue más rápida.");
+                            }
+                            else
+                            {
+                                Console.WriteLine("Ambas versiones tuvieron el mismo tiempo.");
+                            }
+
+                            Console.WriteLine();
+                            Console.WriteLine("Presione una tecla para continuar...");
+                            Console.ReadKey();
+
+                            break;
+                        }
 
                     case "6":
-                        Console.WriteLine(" Aquí se mostrarán las estadísticas");
-                        Console.ReadKey();
-                        break;
+                        {
+                            if (medicionSecuencial == null || medicionParalela == null)
+                            {
+                                Console.WriteLine("Primero debe ejecutar las versiones secuencial y paralela.");
+                                Console.ReadKey();
+                                break;
+                            }
 
+                            double speedup =
+                                CalculadoraMetricas.CalcularSpeedup(
+                                    medicionSecuencial.Tiempo,
+                                    medicionParalela.Tiempo);
+
+                            double eficiencia =
+                                CalculadoraMetricas.CalcularEficiencia(
+                                    speedup,
+                                    nucleosUtilizados);
+
+                            Console.WriteLine();
+                            Console.WriteLine("========== ESTADÍSTICAS ==========");
+                            Console.WriteLine();
+
+                            Console.WriteLine($"Procesadores disponibles : {Environment.ProcessorCount}");
+                            Console.WriteLine($"Núcleos utilizados        : {nucleosUtilizados}");
+
+                            Console.WriteLine();
+
+                            Console.WriteLine($"Tiempo secuencial         : {medicionSecuencial.Tiempo:F2} ms");
+                            Console.WriteLine($"Tiempo paralelo           : {medicionParalela.Tiempo:F2} ms");
+
+                            Console.WriteLine();
+
+                            Console.WriteLine($"Speedup                   : {speedup:F2}x");
+                            Console.WriteLine($"Eficiencia                : {eficiencia:F2}%");
+
+                            Console.WriteLine();
+                            Console.WriteLine("Presione una tecla para continuar...");
+                            Console.ReadKey();
+
+                            break;
+                        }
                     case "7":
                         salir = true;
                         break;
@@ -173,5 +256,6 @@ namespace FraudShield
                 }
             }
         }
+
     }
 }
