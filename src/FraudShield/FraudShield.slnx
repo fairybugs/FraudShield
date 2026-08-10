@@ -1,3 +1,4 @@
 <Solution>
   <Project Path="FraudShield/FraudShield.csproj" />
+  <Project Path="Tests/Tests.csproj" Id="a78e8969-4dd9-41fe-bc6a-2a285fcb88eb" />
 </Solution>

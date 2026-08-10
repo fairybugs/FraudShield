@@ -1,12 +1,261 @@
-﻿namespace FraudShield;
+﻿using System;
+using FraudShield.Data;
+using FraudShield.Generador;
+using FraudShield.Models;
+using FraudShield.Services;
+using FraudShield.Metrics;
 
-internal class Program
+
+namespace FraudShield
 {
-    static void Main(string[] args)
+    class Program
     {
-        Console.WriteLine("====================================");
-        Console.WriteLine("BIENVENIDO A FRAUDSHIELD");
-        Console.WriteLine("Sistema Inteligente de Detección de Fraude Bancario");
-        Console.WriteLine("====================================");
+        static void Main(string[] args)
+        {
+            bool salir = false;
+            var generador = new GeneradorCSV();
+            List<Transaccion> transacciones = new();
+
+            ResultadoMedicion? medicionSecuencial = null;
+            ResultadoMedicion? medicionParalela = null;
+            var resumenFraude = new ResumenFraude();
+
+            int nucleosUtilizados = 0;
+
+            while (!salir)
+            {
+                Console.Clear();
+                Console.WriteLine("==========================================");
+                Console.WriteLine("SISTEMA DETECTOR DE FRAUDE BANCARIO");
+                Console.WriteLine("==========================================");
+                Console.WriteLine("1. Generar archivo CSV");
+                Console.WriteLine("2. Leer archivo CSV ");
+                Console.WriteLine("3. Ejecutar versión secuencial");
+                Console.WriteLine("4. Ejecutar versión paralela ");
+                Console.WriteLine("5. Comparar resultados ");
+                Console.WriteLine("6. Mostrar estadísticas ");
+                Console.WriteLine("7. Salir");
+                Console.WriteLine("==========================================");
+                Console.Write("Seleccione una opción: ");
+
+                string opcion = Console.ReadLine() ?? string.Empty;
+
+                switch (opcion)
+                {
+                    case "1":
+                        Console.Write("¿Cuántas transacciones desea generar? ");
+                        int total = int.Parse(Console.ReadLine() ?? "0");
+
+                        Console.Write("¿Cuántas transacciones fraudulentas desea generar? ");
+                        int fraudulentas = int.Parse(Console.ReadLine() ?? "0");
+
+                        string rutaArchivo = $"transacciones_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+
+                        generador.GenerarArchivo(total, fraudulentas, rutaArchivo);
+                        Console.WriteLine("Presione una tecla para continuar...");
+                        Console.ReadKey();
+                        break;
+
+                    case "2":
+                        Console.Write("Ingrese la ruta del archivo CSV: ");
+                        string rutaLectura = Console.ReadLine() ?? string.Empty;
+
+                        var lector = new LectorCSV();
+                        transacciones = lector.LeerArchivo(rutaLectura);
+
+                        Console.WriteLine($"Se leyeron {transacciones.Count} transacciones.");
+                        Console.WriteLine("Presione una tecla para continuar...");
+                        Console.ReadKey();
+                        break;
+
+                    case "3":
+
+                        if (!transacciones.Any())
+                        {
+                            Console.WriteLine("Primero debe cargar un archivo CSV.");
+                            Console.ReadKey();
+                            break;
+                        }
+
+                        Console.WriteLine();
+                        Console.WriteLine("===== DETECTOR SECUENCIAL =====");
+                        Console.WriteLine($"Hilo principal de inicio: {Environment.CurrentManagedThreadId}");
+                        Console.WriteLine();
+
+                        var detectorSecuencial = new DetectorSecuencial();
+                        var medidorSecuencial = new MedidorTiempo();
+
+                        medicionSecuencial =
+                            medidorSecuencial.Medir(detectorSecuencial, transacciones);
+
+                        Console.WriteLine($"Transacciones analizadas: {transacciones.Count}");
+                        Console.WriteLine($"Resultados generados: {medicionSecuencial.Resultados.Count}");
+                        Console.WriteLine($"Tiempo de ejecución: {medicionSecuencial.Tiempo} ms");
+
+                        resumenFraude.Mostrar(medicionSecuencial.Resultados);
+
+                        Console.WriteLine();
+
+                        Console.WriteLine($"Hilo principal de finalización: {Environment.CurrentManagedThreadId}");
+
+                        Console.WriteLine();
+                        Console.WriteLine("Presione una tecla para continuar...");
+                        Console.ReadKey();
+
+                        break;
+
+                    case "4":
+
+                        if (!transacciones.Any())
+                        {
+                            Console.WriteLine("Primero debe cargar un archivo CSV.");
+                            Console.ReadKey();
+                            break;
+                        }
+
+                        Console.WriteLine();
+                        Console.WriteLine("===== DETECTOR PARALELO =====");
+                        Console.WriteLine($"Hilo principal de inicio: {Environment.CurrentManagedThreadId}");
+                        Console.WriteLine();
+
+                        Console.WriteLine($"Procesadores disponibles: {Environment.ProcessorCount}");
+
+                        Console.Write("Ingrese la cantidad de núcleos a utilizar: ");
+
+                        int nucleos = int.Parse(Console.ReadLine() ?? "1");
+                        nucleosUtilizados = nucleos;
+
+                        if (nucleos < 1 || nucleos > Environment.ProcessorCount)
+                        {
+                            Console.WriteLine("Cantidad de núcleos no válida.");
+                            Console.WriteLine("Presione una tecla para continuar...");
+                            Console.ReadKey();
+                            break;
+                        }
+
+                        nucleosUtilizados = nucleos;
+
+                        var detectorParalelo = new DetectorParalelo(nucleosUtilizados);
+                        var medidorParalelo = new MedidorTiempo();
+
+                        medicionParalela =
+                            medidorParalelo.Medir(detectorParalelo, transacciones);
+
+                        Console.WriteLine();
+
+                        Console.WriteLine($"Núcleos utilizados: {nucleosUtilizados}");
+                        Console.WriteLine($"Transacciones analizadas: {transacciones.Count}");
+                        Console.WriteLine($"Resultados generados: {medicionParalela.Resultados.Count}");
+                        Console.WriteLine($"Tiempo de ejecución: {medicionParalela.Tiempo} ms");
+
+                        resumenFraude.Mostrar(medicionParalela.Resultados);
+
+                        Console.WriteLine();
+                        Console.WriteLine($"Hilo principal de finalización: {Environment.CurrentManagedThreadId}");
+
+                        Console.WriteLine();
+                        Console.WriteLine("Presione una tecla para continuar...");
+                        Console.ReadKey();
+
+                        break;
+
+                    case "5":
+                        {
+                            if (medicionSecuencial == null || medicionParalela == null)
+                            {
+                                Console.WriteLine("Primero debe ejecutar las versiones secuencial y paralela.");
+                                Console.ReadKey();
+                                break;
+                            }
+
+                            double speedup =
+                                CalculadoraMetricas.CalcularSpeedup(
+                                    medicionSecuencial.Tiempo,
+                                    medicionParalela.Tiempo);
+
+                            Console.WriteLine();
+                            Console.WriteLine("========== COMPARACIÓN ==========");
+                            Console.WriteLine();
+
+                            Console.WriteLine($"Tiempo secuencial : {medicionSecuencial.Tiempo:F2} ms");
+                            Console.WriteLine($"Tiempo paralelo   : {medicionParalela.Tiempo:F2} ms");
+                            Console.WriteLine($"Speedup           : {speedup:F2}x");
+
+                            Console.WriteLine();
+
+                            if (medicionParalela.Tiempo < medicionSecuencial.Tiempo)
+                            {
+                                Console.WriteLine("La versión paralela fue más rápida.");
+                            }
+                            else if (medicionParalela.Tiempo > medicionSecuencial.Tiempo)
+                            {
+                                Console.WriteLine("La versión secuencial fue más rápida.");
+                            }
+                            else
+                            {
+                                Console.WriteLine("Ambas versiones tuvieron el mismo tiempo.");
+                            }
+
+                            Console.WriteLine();
+                            Console.WriteLine("Presione una tecla para continuar...");
+                            Console.ReadKey();
+
+                            break;
+                        }
+
+                    case "6":
+                        {
+                            if (medicionSecuencial == null || medicionParalela == null)
+                            {
+                                Console.WriteLine("Primero debe ejecutar las versiones secuencial y paralela.");
+                                Console.ReadKey();
+                                break;
+                            }
+
+                            double speedup =
+                                CalculadoraMetricas.CalcularSpeedup(
+                                    medicionSecuencial.Tiempo,
+                                    medicionParalela.Tiempo);
+
+                            double eficiencia =
+                                CalculadoraMetricas.CalcularEficiencia(
+                                    speedup,
+                                    nucleosUtilizados);
+
+                            Console.WriteLine();
+                            Console.WriteLine("========== ESTADÍSTICAS ==========");
+                            Console.WriteLine();
+
+                            Console.WriteLine($"Procesadores disponibles : {Environment.ProcessorCount}");
+                            Console.WriteLine($"Núcleos utilizados        : {nucleosUtilizados}");
+
+                            Console.WriteLine();
+
+                            Console.WriteLine($"Tiempo secuencial         : {medicionSecuencial.Tiempo:F2} ms");
+                            Console.WriteLine($"Tiempo paralelo           : {medicionParalela.Tiempo:F2} ms");
+
+                            Console.WriteLine();
+
+                            Console.WriteLine($"Speedup                   : {speedup:F2}x");
+                            Console.WriteLine($"Eficiencia                : {eficiencia:F2}%");
+
+                            Console.WriteLine();
+                            Console.WriteLine("Presione una tecla para continuar...");
+                            Console.ReadKey();
+
+                            break;
+                        }
+                    case "7":
+                        salir = true;
+                        break;
+
+                    default:
+                        Console.WriteLine(" Opción inválida. Intente de nuevo.");
+                        Console.ReadKey();
+                        break;
+                }
+            }
+        }
+
     }
 }
