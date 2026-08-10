@@ -1,4 +1,4 @@
-### **# Métricas de Rendimiento**
+# **Métricas de Rendimiento**
 
 
 
@@ -10,7 +10,7 @@ con la ejecución paralela utilizando diferentes cantidades de núcleos.
 
 ###### 
 
-###### **## Configuración de las pruebas**
+### **Configuración de las pruebas**
 
 
 
@@ -28,7 +28,7 @@ con la ejecución paralela utilizando diferentes cantidades de núcleos.
 
 ###### 
 
-###### **## 1. Comparación según cantidad de núcleos**
+### **1. Comparación según cantidad de núcleos**
 
 
 
@@ -36,7 +36,7 @@ con la ejecución paralela utilizando diferentes cantidades de núcleos.
 |-|-|-|-|
 |1|53,327|0.97x|97.17%|
 |2|29,719|1.74x|87.18%|
-|4|17,272|3.00x|75.00% |
+|4|17,272|3.00x|75.00%|
 |6|14,093|3.68x|61.28%|
 |8|13,098|3.96x|49.45%|
 
@@ -48,7 +48,7 @@ con la ejecución paralela utilizando diferentes cantidades de núcleos.
 
 
 
-###### **## 2. Comparación secuencial y paralela**
+### **2. Comparación secuencial y paralela**
 
 
 
@@ -81,7 +81,7 @@ tiempo de 13,098 ms.
 
 
 
-###### **## 3. Speedup**
+### **3. Speedup**
 
 
 
@@ -115,7 +115,7 @@ fue aproximadamente cuatro veces más rápida que la versión secuencial.
 
 
 
-###### **## 4. Eficiencia**
+### **4. Eficiencia**
 
 
 
@@ -140,7 +140,7 @@ Los resultados obtenidos fueron:
 |**Núcleos**|**Speedup**|**Eficiencia**|
 |-|-|-|
 |1|0.97x|97.17%|
-|2| 1.74x|87.18%|
+|2|1.74x|87.18%|
 |4|3.00x|75.00%|
 |6|3.68x|61.28%|
 |8|3.96x|49.45%|
@@ -153,7 +153,7 @@ Los resultados obtenidos fueron:
 
 
 
-###### **## 5. Análisis de escalabilidad**
+### **5. Análisis de escalabilidad**
 
 
 
@@ -205,7 +205,7 @@ completamente paralela.
 
 
 
-###### **## 6. Cuellos de botella y limitaciones**
+### **6. Cuellos de botella y limitaciones**
 
 
 
@@ -243,7 +243,7 @@ obtener una mejora proporcional del rendimiento.
 
 
 
-###### **## 7. Conclusión de las pruebas**
+### **7. Conclusión de las pruebas**
 
 
 
